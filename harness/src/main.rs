@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 struct CppString {
@@ -22,28 +24,30 @@ extern "C" {
 }
 
 fn main() {
-    let mut c = criterion::Criterion::default();
+    let mut c = criterion::Criterion::default()
+        .warm_up_time(Duration::from_millis(100))
+        .measurement_time(Duration::from_secs(1));
 
+    let mut group = c.benchmark_group("without first char");
     for (name, input) in [
         ("ASCII-only", "abcde"),
         ("2 byte first char", "Ãbcde"),
         ("3 byte first char", "คbcde"),
         ("4 byte first char", "𒆣bcde"),
     ] {
-        let mut group = c.benchmark_group(format!("without first char: {name}"));
         println!("in: {input}");
-        group.bench_with_input("Rust", input, |b, input| {
+        group.bench_with_input(format!("{name}, Rust"), input, |b, input| {
             b.iter(|| verq::without_first_char(input))
         });
         println!("out: {}", verq::without_first_char(input));
         group.bench_with_input(
-            "C++, Basalt",
+            format!("{name}, C++"),
             &unsafe { CppString::from_str(input) },
             |b, &input| b.iter(|| unsafe { without_first_char_basalt(input) }),
         );
         println!("out: {}", unsafe {
             without_first_char_basalt(CppString::from_str(input)).as_str()
         });
-        group.finish()
     }
+    group.finish()
 }
