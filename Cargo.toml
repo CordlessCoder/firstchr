@@ -1,0 +1,8 @@
+[workspace]
+resolver = "2"
+
+members = ["harness", "verq"]
+default-members = ["harness"]
+
+[workspace.dependencies]
+verq = { "path" = "verq" }
