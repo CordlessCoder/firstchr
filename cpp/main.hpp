@@ -6,4 +6,6 @@ extern "C" struct string {
     size_t len;
 };
 
+extern "C" string without_first_char_mnem(string data);
 extern "C" string without_first_char_basalt(string data);
+extern "C" string without_first_char_vxppy(string data);

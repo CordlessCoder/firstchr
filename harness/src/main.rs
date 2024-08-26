@@ -21,12 +21,14 @@ impl CppString {
 
 extern "C" {
     fn without_first_char_basalt(data: CppString) -> CppString;
+    fn without_first_char_mnem(data: CppString) -> CppString;
+    fn without_first_char_vxppy(data: CppString) -> CppString;
 }
 
 fn main() {
     let mut c = criterion::Criterion::default()
-        .warm_up_time(Duration::from_millis(100))
-        .measurement_time(Duration::from_secs(1));
+        .warm_up_time(Duration::from_millis(50))
+        .measurement_time(Duration::from_millis(1000));
 
     let mut group = c.benchmark_group("without first char");
     for (name, input) in [
@@ -41,12 +43,28 @@ fn main() {
         });
         println!("out: {}", verq::without_first_char(input));
         group.bench_with_input(
-            format!("{name}, C++"),
+            format!("{name}, C++, Basalt"),
             &unsafe { CppString::from_str(input) },
             |b, &input| b.iter(|| unsafe { without_first_char_basalt(input) }),
         );
         println!("out: {}", unsafe {
             without_first_char_basalt(CppString::from_str(input)).as_str()
+        });
+        group.bench_with_input(
+            format!("{name}, C++, mnem"),
+            &unsafe { CppString::from_str(input) },
+            |b, &input| b.iter(|| unsafe { without_first_char_mnem(input) }),
+        );
+        println!("out: {}", unsafe {
+            without_first_char_mnem(CppString::from_str(input)).as_str()
+        });
+        group.bench_with_input(
+            format!("{name}, C++, vxppy"),
+            &unsafe { CppString::from_str(input) },
+            |b, &input| b.iter(|| unsafe { without_first_char_vxppy(input) }),
+        );
+        println!("out: {}", unsafe {
+            without_first_char_vxppy(CppString::from_str(input)).as_str()
         });
     }
     group.finish()
